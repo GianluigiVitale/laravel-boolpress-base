@@ -4,8 +4,6 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Post;
-use Illuminate\Support\Str;
-use Illuminate\Support\Facades\Validator;
 
 
 class PostController extends Controller
@@ -34,7 +32,7 @@ class PostController extends Controller
      */
     public function create()
     {
-        return view('posts.create');
+        //
     }
 
     /**
@@ -45,30 +43,7 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
-        $data['slug'] = Str::slug($data['title'], '-') . rand(1,100);
-
-        $validator = Validator::make($data, [
-            'title' => 'required|string|max:150',
-            'author' => 'required|string|max:100',
-            'body' => 'required|string',
-            'published' => 'required',
-        ]);
-
-        if ($validator->fails()) {
-            return redirect('posts/create')
-                ->withErrors($validator)
-                ->withInput();
-        }
-
-        $post = new Post;
-        $post->fill($data);
-        $saved = $post->save();
-        if (!$saved) {
-            dd('errore di salvataggio');
-        }
-
-        return redirect()->route('posts.show', $post->id);
+        //
     }
 
     /**
@@ -79,12 +54,7 @@ class PostController extends Controller
      */
     public function show($id)
     {
-        $post = Post::find($id);
-        if (empty($post)) {
-            abort('404');
-        }
-
-        return view('posts.show', compact('post'));
+        //
     }
 
     /**
