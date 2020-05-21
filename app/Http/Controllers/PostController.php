@@ -90,12 +90,16 @@ class PostController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  Post $post
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Post $post)
     {
-        //
+        if (empty($post)) {
+            abort('404');
+        }
+
+        return view('posts.edit', compact('post'));
     }
 
     /**
@@ -107,7 +111,31 @@ class PostController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $post = Post::find($id);
+        if (empty($post)) {
+            abort('404');
+        }
+
+        $data = $request->all();
+        $data['slug'] = Str::slug($data['title'], '-') . rand(1,100);
+
+        $validator = Validator::make($data, [
+            'title' => 'required|string|max:150',
+            'author' => 'required|string|max:100',
+            'body' => 'required|string',
+            'published' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect('posts/edit')
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $post->fill($data);
+        $updated = $post->update();
+
+        return redirect()->route('posts.show', $post->id);
     }
 
     /**
@@ -118,6 +146,13 @@ class PostController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $post = Post::find($id);
+        if (empty($post)) {
+            abort('404');
+        }
+
+        $post->delete();
+
+        return redirect()->route('posts.index');
     }
 }
