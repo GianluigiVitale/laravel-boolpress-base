@@ -5,6 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\User;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+
 
 class UserController extends Controller
 {
@@ -27,7 +31,7 @@ class UserController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.users.create');
     }
 
     /**
@@ -38,7 +42,33 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->all();
+
+        $validator = Validator::make($data, [
+            'name' => 'required|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|max:16|min:8'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.users.edit', $id)
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $user = new User;
+        $user->name = $data['name'];
+        $user->email = $data['email'];
+        $user->password = Hash::make($data['password']);
+        $saved = $user->save();
+
+        if(!$saved) {
+            return redirect()->route('admin.users.create')
+                ->with('status', 'Utente non salvato');
+        }
+
+        return redirect()->route('admin.users.index')
+        ->with('status', "Utente $user->name salvato");
     }
 
     /**
@@ -49,7 +79,8 @@ class UserController extends Controller
      */
     public function show($id)
     {
-        //
+        $user = User::findOrFail($id);
+        return view('admin.users.show', compact('user'));
     }
 
     /**
@@ -60,7 +91,8 @@ class UserController extends Controller
      */
     public function edit($id)
     {
-        //
+        $user = User::findOrFail($id);
+        return view('admin.users.edit', compact('user'));
     }
 
     /**
@@ -72,7 +104,33 @@ class UserController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $user = User::findOrFail($id);
+        $data = $request->all();
+
+        if ($data['email'] == $user->email) {
+            unset($data['email']);
+        }
+
+        $validator = Validator::make($data, [
+            'name' => 'required|max:255',
+            'email' => 'email|unique:users'
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->route('admin.users.edit', $id)
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $user->fill($data);
+        $updated = $user->update();
+
+        if (!$updated) {
+            return redirect()->route('admin.users.edit', $id)
+                ->with('status', 'Utente non aggiornato');
+        }
+
+        return redirect()->route('admin.users.show', $user->id);
     }
 
     /**
@@ -83,6 +141,16 @@ class UserController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $user = User::findOrFail($id);
+        if ($user->id == Auth::id()) {
+            return redirect()->back()->with('status', 'Non puoi auto cancellarti');
+        }
+        $deleted = $user->delete();
+
+        if (!$deleted) {
+            return redirect()->back()->with('status', 'Utente non cancellato');
+        }
+
+        return redirect()->route('admin.users.index')->with('status', "Utente $user->id cancellato");
     }
 }

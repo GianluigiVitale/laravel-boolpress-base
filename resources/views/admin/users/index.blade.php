@@ -3,6 +3,11 @@
 <div class="container">
     <div class="row">
         <div class="col-12">
+            <a href="{{route('admin.users.create')}}" class="btn btn-primary">Inserisci un nuovo utente</a>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-12">
             <table class="table">
                 <thead>
                     <tr>
@@ -17,6 +22,14 @@
                             <td>{{$user->id}}</td>
                             <td>{{$user->name}}</td>
                             <td>{{$user->email}}</td>
+                            <td><a class="badge badge-warning" href="{{route('admin.users.edit', $user->id)}}">Modifica</a></td>
+                            <td>
+                                <form class="" action="{{route('admin.users.destroy', $user->id)}}" method="post">
+                                    @method('DELETE')
+                                    @csrf
+                                    <input class="btn btn-danger" type="submit" name="" value="Cancella">
+                                </form>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
